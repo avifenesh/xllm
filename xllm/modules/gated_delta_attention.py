@@ -442,10 +442,14 @@ class GatedDeltaAttention(nn.Module):
         # AWM
         if self.attn_act_func == 'softdelta':
             n_rep = self.local_heads // self.local_kv_heads
-            xq = rearrange(xq, 'b l (k n s) -> b l k n s', k=self.local_kv_heads, n=n_rep + 1)
-            xq = rearrange(xq[:, :, :, :n_rep], 'b l k n s -> b l (k n s)')
+            xqk = rearrange(xq, 'b l (k n s) -> b l k n s', k=self.local_kv_heads, n=n_rep + 1)
+            xq = rearrange(xqk[:, :, :, :n_rep], 'b l k n s -> b l (k n s)')
+            kq = rearrange(xqk[:, :, :, -1], 'b l k s -> b l (k s)')
+        else:
+            assert self.attn_act_func == 'softmax'
+            kq = xk
         awk, awk_mask, memory, log_norm_term, prev_aqk, prev_akk, _ = self.adaptive_working_memory(
-            xq, xk, xk, v, memory, log_norm_term, prev_aqk, prev_akk, prev_av,
+            xq, kq, xk, v, memory, log_norm_term, prev_aqk, prev_akk, prev_av,
             segment_idx, prev_segment_count,
         )
         if health_collector is not None:
