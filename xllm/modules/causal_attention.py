@@ -215,7 +215,7 @@ class CausalSoftdeltaAttention(nn.Module):
 
     def forward(
         self,
-        xqk: Tensor,
+        xq: Tensor,
         xk: Tensor,
         xv: Tensor,
         g: Optional[Tensor],
@@ -226,15 +226,12 @@ class CausalSoftdeltaAttention(nn.Module):
         deterministic: bool = True,
         cache: Optional[Tuple[Tensor, Tensor, int]] = None,
     ):
-        n_rep = self.n_heads // self.n_kv_heads
-        bs, slen, _ = xqk.shape
-        # B x L x K x (N+1) x S
-        xqk = rearrange(xqk, 'b l (k n s) -> b l k n s', k=self.n_kv_heads, n=n_rep + 1)
+        bs, slen, _ = xq.shape
         # B x L x H x S
-        xq = rearrange(xqk[:, :, :, :n_rep], 'b l k n s -> b l (k n) s')
+        xq = rearrange(xq, 'b l (h d) -> b l h d', h=self.n_heads)
         # B x L x K x S
-        kq = xqk[:, :, :, -1]
         xk = rearrange(xk, 'b l (k s) -> b l k s', k=self.n_kv_heads)
+        kq = F.silu(xk)
         xv = rearrange(xv, 'b l (k s) -> b l k s', k=self.n_kv_heads)
 
         if self.rope_head_dim == self.head_dim:
