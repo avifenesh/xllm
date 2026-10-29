@@ -158,9 +158,9 @@ class MultiheadAttention(nn.Module):
         self.key_norm = GroupRMSNorm(
             self.n_kv_heads * self.head_dim,
             num_groups=self.n_kv_heads,
-            elementwise_affine=False,
+            elementwise_affine=True,
             eps=rmsnorm_eps,
-            memory_efficient=True,  # for knorm, always use efficient memory
+            memory_efficient=False,
         ) if self.qknorm else None
 
         if self.attn_act_func == "softmax":

@@ -186,9 +186,9 @@ class GatedDeltaAttention(nn.Module):
         self.key_norm = GroupRMSNorm(
             kdim,
             num_groups=self.num_kv_heads,
-            elementwise_affine=False,
+            elementwise_affine=True,
             eps=rmsnorm_eps,
-            memory_efficient=True,  # for knorm, always use efficient memory
+            memory_efficient=False,
         )
 
         # attention gate projection
